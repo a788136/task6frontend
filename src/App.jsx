@@ -3,15 +3,39 @@ import NicknameInput from "./components/NicknameInput";
 import PresentationList from "./components/PresentationList";
 import CreatePresentationForm from "./components/CreatePresentationForm";
 import { getPresentations, createPresentation } from "./api/presentations";
-import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import PresentationPage from "./components/PresentationPage";
 
-// Вынеси HomePage наружу!
+// Вынесенный Header со всеми проверками!
+function Header({ nickname }) {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const isPresentation = location.pathname.startsWith("/presentation/");
+
+  return (
+    <header className="bg-blue-700 text-white py-4 mb-8 shadow">
+      <div className="container mx-auto px-4 flex justify-between items-center">
+        <div className="flex items-center gap-2">
+          {isPresentation && (
+            <button
+              className="bg-white text-blue-700 px-4 py-1 rounded mr-4 font-bold shadow hover:bg-blue-100 transition"
+              onClick={() => navigate("/")}
+            >
+              ← К презентациям
+            </button>
+          )}
+          <span className="font-bold text-xl">Collaborative Presentations</span>
+        </div>
+        <span>👤 {nickname}</span>
+      </div>
+    </header>
+  );
+}
+
 function HomePage({ nickname, presentations, onCreate }) {
   const navigate = useNavigate();
 
   const handleJoin = (presentation) => {
-    // Реальный переход:
     navigate(`/presentation/${presentation._id}`);
   };
 
@@ -47,13 +71,8 @@ function App() {
 
   return (
     <BrowserRouter>
+      <Header nickname={nickname} />
       <div className="min-h-screen bg-gray-100">
-        <header className="bg-blue-700 text-white py-4 mb-8 shadow">
-          <div className="container mx-auto px-4 flex justify-between">
-            <span className="font-bold text-xl">Collaborative Presentations</span>
-            <span>👤 {nickname}</span>
-          </div>
-        </header>
         <Routes>
           <Route
             path="/"

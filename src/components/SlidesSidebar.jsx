@@ -6,14 +6,17 @@ export default function SlidesSidebar({
   onSelect,
   onAdd,
   onDelete,
+  myRole, // <--- добавили
 }) {
   return (
     <div className="w-60 bg-white border-r p-4 overflow-y-auto">
       <div className="flex justify-between items-center mb-4">
         <div className="font-bold">Слайды</div>
-        <button className="bg-blue-500 text-white rounded px-3 py-1" onClick={onAdd}>
-          +
-        </button>
+        {myRole === "editor" && ( // <--- показываем только editor
+          <button className="bg-blue-500 text-white rounded px-3 py-1" onClick={onAdd}>
+            +
+          </button>
+        )}
       </div>
       <ul>
         {slides.map((slide, idx) => (
@@ -28,13 +31,15 @@ export default function SlidesSidebar({
           </li>
         ))}
       </ul>
-      <button
-        className="mt-6 bg-red-500 text-white rounded px-4 py-1 w-full"
-        onClick={onDelete}
-        disabled={slides.length === 0}
-      >
-        Удалить выбранный
-      </button>
+      {myRole === "editor" && ( // <--- показываем только editor
+        <button
+          className="mt-6 bg-red-500 text-white rounded px-4 py-1 w-full"
+          onClick={onDelete}
+          disabled={slides.length === 0}
+        >
+          Удалить выбранный
+        </button>
+      )}
     </div>
   );
 }

@@ -141,12 +141,13 @@ export default function PresentationPage({ nickname }) {
   return (
     <div className="flex h-[80vh]">
       <SlidesSidebar
-        slides={slides}
-        selectedSlideIndex={selectedSlideIndex}
-        onSelect={setSelectedSlideIndex}
-        onAdd={handleAddSlide}
-        onDelete={handleDeleteSlide}
-      />
+  slides={slides}
+  selectedSlideIndex={selectedSlideIndex}
+  onSelect={setSelectedSlideIndex}
+  onAdd={handleAddSlide}
+  onDelete={handleDeleteSlide}
+  myRole={myRole} // <-- вот это!
+/>
       <SlideArea
         selectedSlide={selectedSlide}
         myRole={myRole}
