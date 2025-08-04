@@ -5,7 +5,6 @@ import { getPresentationWithSlides } from "../api/presentations";
 import { updateSlide } from "../api/slides";
 import SlidesSidebar from "./SlidesSidebar";
 import SlideArea from "./SlideArea";
-import UsersSidebar from "./UsersSidebar";
 
 export default function PresentationPage({ nickname }) {
   const { id: presentationId } = useParams();
@@ -152,13 +151,6 @@ export default function PresentationPage({ nickname }) {
         selectedSlide={selectedSlide}
         myRole={myRole}
         onTextChange={handleTextChange}
-      />
-      <UsersSidebar
-        users={users}
-        myRole={myRole}
-        nickname={nickname}
-        creatorNickname={presentation.creatorNickname}
-        onChangeRole={handleRoleChange}
       />
     </div>
   );
