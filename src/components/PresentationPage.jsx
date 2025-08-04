@@ -5,6 +5,7 @@ import { getPresentationWithSlides } from "../api/presentations";
 import { updateSlide } from "../api/slides";
 import SlidesSidebar from "./SlidesSidebar";
 import SlideArea from "./SlideArea";
+import Toolbar from "./Toolbar";
 
 export default function PresentationPage({ nickname }) {
   const { id: presentationId } = useParams();
@@ -101,39 +102,50 @@ export default function PresentationPage({ nickname }) {
     });
   };
 
-  const handleTextChange = (e) => {
-  const value = e.target.value;
-  const currentSlide = slides[selectedSlideIndex];
-  if (!currentSlide) return;
+  // Drag & Drop для блоков
+  const handleBlockMove = (block) => {
+    const currentSlide = slides[selectedSlideIndex];
+    if (!currentSlide) return;
+    const updatedBlocks = currentSlide.blocks.map(b =>
+      b._id === block._id ? block : b
+    );
+    const newSlides = [...slides];
+    newSlides[selectedSlideIndex] = { ...currentSlide, blocks: updatedBlocks };
+    setSlides(newSlides);
 
-  // 1. Мгновенно обновляем локально
-  let updatedBlocks = [...(currentSlide.blocks || [])];
-  if (updatedBlocks.length === 0) {
-    updatedBlocks.push({ type: "text", content: value });
-  } else {
-    updatedBlocks[0].content = value;
-  }
-  const newSlides = [...slides];
-  newSlides[selectedSlideIndex] = { ...currentSlide, blocks: updatedBlocks };
-  setSlides(newSlides);
-
-  // 2. СРАЗУ (без ожидания updateSlide!) отправляем всем по сокету
-  socket.current.emit("update-block", {
-    slideId: currentSlide._id,
-    block: { ...updatedBlocks[0], _id: updatedBlocks[0]._id }, // если есть
-  });
-
-  // 3. Для устойчивости: просто обновляем в базе, но не ждём!
-  updateSlide(currentSlide._id, { blocks: updatedBlocks }).catch(console.error);
-};
-
-
-  const handleRoleChange = (user, newRole) => {
-    socket.current.emit("change-role", {
-      presentationId,
-      nickname: user.nickname,
-      newRole
+    socket.current.emit("update-block", {
+      slideId: currentSlide._id,
+      block,
     });
+
+    updateSlide(currentSlide._id, { blocks: updatedBlocks }).catch(console.error);
+  };
+
+  // Изменение текста
+  const handleTextChange = (block) => {
+    handleBlockMove(block);
+  };
+
+  // Добавить текстовый блок
+  const handleAddTextBlock = () => {
+    const currentSlide = slides[selectedSlideIndex];
+    if (!currentSlide || myRole !== "editor") return;
+    const newBlock = {
+      type: "text",
+      content: "Новый текст",
+      x: 300,
+      y: 160,
+      width: 180,
+      height: 40,
+      _id: Date.now().toString(), // для фронта временно, на бэке появится настоящий id
+    };
+    const updatedBlocks = [...(currentSlide.blocks || []), newBlock];
+    const updatedSlide = { ...currentSlide, blocks: updatedBlocks };
+    const newSlides = [...slides];
+    newSlides[selectedSlideIndex] = updatedSlide;
+    setSlides(newSlides);
+
+    updateSlide(currentSlide._id, { blocks: updatedBlocks }).catch(console.error);
   };
 
   if (loading || !presentation)
@@ -149,13 +161,17 @@ export default function PresentationPage({ nickname }) {
         onSelect={setSelectedSlideIndex}
         onAdd={handleAddSlide}
         onDelete={handleDeleteSlide}
-        myRole={myRole} // <-- вот это!
-        />
-      <SlideArea
-        selectedSlide={selectedSlide}
         myRole={myRole}
-        onTextChange={handleTextChange}
       />
+      <div className="flex flex-col flex-1 items-center">
+        <Toolbar myRole={myRole} onAddTextBlock={handleAddTextBlock} />
+        <SlideArea
+          selectedSlide={selectedSlide}
+          myRole={myRole}
+          onTextChange={handleTextChange}
+          onBlockMove={handleBlockMove}
+        />
+      </div>
     </div>
   );
 }
