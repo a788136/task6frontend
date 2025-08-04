@@ -55,9 +55,9 @@ export default function PresentationList({
   }, [menuOpenId]);
 
   return (
-    <div className="max-w-8xl mx-auto mt-10 div2">
+    <div className="max-w-8xl mx-auto mt-10 div4">
       <h2 className="text-2xl mb-4">Презентации:</h2>
-      <div className="flex flex-wrap gap-10 justify-between">
+      <div className="flex flex-wrap gap-10">
         {presentations.map((p) => {
           const isOwner = currentUser === p.creatorNickname;
           return (

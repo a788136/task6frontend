@@ -13,3 +13,9 @@
 .div3 {
   border: solid 1px #f2f3f5;
 }
+
+.div4{
+  padding-left: 50px;
+  padding-right: 50px;
+  padding-bottom: 50px;
+}

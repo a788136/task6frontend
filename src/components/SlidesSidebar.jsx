@@ -1,4 +1,5 @@
 import React from "react";
+import PlusSidebar from "../assets/2.png";
 
 export default function SlidesSidebar({
   slides,
@@ -13,8 +14,8 @@ export default function SlidesSidebar({
       <div className="flex justify-between items-center mb-4">
         <div className="font-bold">Слайды</div>
         {myRole === "editor" && ( // <--- показываем только editor
-          <button className="bg-blue-500 text-white rounded px-3 py-1" onClick={onAdd}>
-            +
+          <button className="bg-blue-500 text-white rounded px-3 py-1 cursor-pointer" onClick={onAdd}>
+            <img src={PlusSidebar} alt="" className="w-[20px]"/>
           </button>
         )}
       </div>
@@ -33,7 +34,7 @@ export default function SlidesSidebar({
       </ul>
       {myRole === "editor" && ( // <--- показываем только editor
         <button
-          className="mt-6 bg-red-500 text-white rounded px-4 py-1 w-full"
+          className="mt-6 bg-red-500 text-white rounded px-4 py-1 w-full cursor-pointer"
           onClick={onDelete}
           disabled={slides.length === 0}
         >

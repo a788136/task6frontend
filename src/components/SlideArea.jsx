@@ -3,7 +3,7 @@ import React from "react";
 export default function SlideArea({ selectedSlide, myRole, onTextChange }) {
   return (
     <div className="flex-1 flex flex-col items-center justify-center bg-gray-50 relative">
-      <div className="w-[700px] h-[400px] bg-white rounded shadow-lg flex flex-col items-center justify-center">
+      <div className="w-[800px] h-[400px] bg-white rounded shadow-lg flex flex-col items-center justify-center">
         {selectedSlide ? (
           <textarea
             className="w-full h-full resize-none outline-none border-none text-lg p-8"
