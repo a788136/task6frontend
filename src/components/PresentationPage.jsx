@@ -17,6 +17,10 @@ export default function PresentationPage({ nickname }) {
   const socket = useRef(null);
 
   useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
+  useEffect(() => {
     async function fetchData() {
       setLoading(true);
       const data = await getPresentationWithSlides(presentationId);
