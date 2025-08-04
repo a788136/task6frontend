@@ -13,7 +13,7 @@ function Header({ nickname }) {
   const isPresentation = location.pathname.startsWith("/presentation/");
   return (
     <header className="bg-blue-700 text-white py-4 shadow">
-      <div className="container mx-auto px-4 flex justify-between items-center">
+      <div className="div2 mx-auto px-4 flex justify-between items-center">
         <div className="flex items-center gap-2">
           {isPresentation && (
             <button
@@ -52,7 +52,7 @@ function HomePage({ nickname, presentations, onCreate, onDelete, onRename }) {
   };
 
   return (
-    <div className="container mx-auto px-4">
+    <div className="mx-auto">
       <CreatePresentationForm onCreate={handleCreateAndOpen} />
       <PresentationList
         presentations={presentations}
@@ -105,7 +105,8 @@ function App() {
   return (
     <BrowserRouter>
       <Header nickname={nickname} />
-      <div className="min-h-screen bg-gray-100">
+      <div className="min-h-screen
+      ">
         <Routes>
           <Route
             path="/"

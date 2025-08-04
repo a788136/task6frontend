@@ -1,1 +1,15 @@
 @import "tailwindcss";
+
+.div1{
+  background-color: #f2f3f5;
+  padding-left: 50px;
+}
+
+.div2{
+  padding-left: 50px;
+  padding-right: 50px;
+}
+
+.div3 {
+  border: solid 1px #f2f3f5;
+}

@@ -10,22 +10,37 @@ export default function PresentationList({
   currentUser,
 }) {
   const [menuOpenId, setMenuOpenId] = useState(null);
-  const [modalOpen, setModalOpen] = useState(false);
+  const [renameModalOpen, setRenameModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [renameValue, setRenameValue] = useState("");
   const [renameId, setRenameId] = useState(null);
+  const [deleteId, setDeleteId] = useState(null);
 
   // Открыть модалку переименования
   const handleRenameClick = (presentation) => {
     setRenameId(presentation._id);
     setRenameValue(presentation.title);
-    setModalOpen(true);
+    setRenameModalOpen(true);
     setMenuOpenId(null);
   };
 
-  // "ОК" в модалке
+  // "ОК" в модалке переименования
   const handleRenameOk = () => {
     onRename(renameId, renameValue.trim());
-    setModalOpen(false);
+    setRenameModalOpen(false);
+  };
+
+  // Открыть модалку удаления
+  const handleDeleteClick = (presentation) => {
+    setDeleteId(presentation._id);
+    setDeleteModalOpen(true);
+    setMenuOpenId(null);
+  };
+
+  // "ОК" в модалке удаления
+  const handleDeleteOk = () => {
+    onDelete(deleteId);
+    setDeleteModalOpen(false);
   };
 
   // Закрыть меню при клике вне
@@ -40,19 +55,25 @@ export default function PresentationList({
   }, [menuOpenId]);
 
   return (
-    <div className="max-w-4xl mx-auto mt-10">
+    <div className="max-w-8xl mx-auto mt-10 div2">
       <h2 className="text-2xl mb-4">Презентации:</h2>
-      <div className="flex flex-wrap gap-6">
+      <div className="flex flex-wrap gap-10 justify-between">
         {presentations.map((p) => {
           const isOwner = currentUser === p.creatorNickname;
           return (
             <div
               key={p._id}
-              className="flex flex-col items-stretch w-64 bg-white rounded-xl shadow p-0 group relative"
+              className="flex flex-col items-stretch w-54 bg-white rounded-xl shadow p-0 group relative cursor-pointer hover:shadow-lg transition div3"
+              onClick={() => onJoin(p)}
+              tabIndex={0}
+              onKeyDown={e => {
+                if (e.key === "Enter" || e.key === " ") onJoin(p);
+              }}
+              style={{ outline: "none" }}
             >
               {/* Миниатюра */}
               <div
-                className="w-full h-24 border-b rounded-t-xl bg-gray-50 flex items-center justify-center text-xs text-gray-700 overflow-hidden"
+                className="w-full h-24 rounded-t-xl bg-gray-50 flex items-center justify-center text-xs text-gray-700 overflow-hidden"
                 style={{ minHeight: 96, maxHeight: 96 }}
                 title={p.firstSlideText ? p.firstSlideText : "Нет содержимого"}
               >
@@ -61,12 +82,15 @@ export default function PresentationList({
                   : <span className="text-gray-300">Нет слайда</span>}
               </div>
               {/* Название и меню */}
-              <div className="flex items-center gap-2 px-4 pt-4">
+              <div className="flex items-center gap-2 px-4 pt-4 pb-4" onClick={e => e.stopPropagation()}>
                 <div className="font-semibold text-base truncate flex-1">{p.title}</div>
                 <div className="relative">
                   <button
                     className="ml-1 px-2 py-1 rounded hover:bg-gray-200"
-                    onClick={() => setMenuOpenId(menuOpenId === p._id ? null : p._id)}
+                    onClick={e => {
+                      e.stopPropagation();
+                      setMenuOpenId(menuOpenId === p._id ? null : p._id);
+                    }}
                   >
                     ⋮
                   </button>
@@ -92,10 +116,7 @@ export default function PresentationList({
                         style={{ pointerEvents: isOwner ? "auto" : "none" }}
                         onClick={
                           isOwner
-                            ? () => {
-                                setMenuOpenId(null);
-                                onDelete(p._id);
-                              }
+                            ? () => handleDeleteClick(p)
                             : undefined
                         }
                         tabIndex={isOwner ? 0 : -1}
@@ -121,30 +142,18 @@ export default function PresentationList({
                   )}
                 </div>
               </div>
-              {/* Creator */}
-              <div className="text-gray-400 text-xs truncate px-4 pt-1 pb-2">
-                {p.creatorNickname}
-              </div>
-              {/* Кнопка присоединиться */}
-              <div className="px-4 pb-4 pt-2">
-                <button
-                  className="bg-green-600 text-white rounded px-4 py-1 w-full"
-                  onClick={() => onJoin(p)}
-                >
-                  Присоединиться
-                </button>
-              </div>
+              {/* Больше ничего! */}
             </div>
           );
         })}
       </div>
       {/* Модалка переименования */}
       <Modal
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
+        open={renameModalOpen}
+        onClose={() => setRenameModalOpen(false)}
         title="Переименовать презентацию"
         actions={[
-          <button key="cancel" className="px-4 py-1 rounded bg-gray-200" onClick={() => setModalOpen(false)}>
+          <button key="cancel" className="px-4 py-1 rounded bg-gray-200" onClick={() => setRenameModalOpen(false)}>
             Отмена
           </button>,
           <button
@@ -163,6 +172,27 @@ export default function PresentationList({
           onChange={e => setRenameValue(e.target.value)}
           autoFocus
         />
+      </Modal>
+
+      {/* Модалка подтверждения удаления */}
+      <Modal
+        open={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        title="Удалить презентацию"
+        actions={[
+          <button key="cancel" className="px-4 py-1 rounded bg-gray-200" onClick={() => setDeleteModalOpen(false)}>
+            Отмена
+          </button>,
+          <button
+            key="ok"
+            className="px-4 py-1 rounded bg-red-600 text-white"
+            onClick={handleDeleteOk}
+          >
+            Удалить
+          </button>,
+        ]}
+      >
+        <div>Вы действительно хотите удалить презентацию?</div>
       </Modal>
     </div>
   );
