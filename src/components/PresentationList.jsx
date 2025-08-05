@@ -55,38 +55,63 @@ export default function PresentationList({
   }, [menuOpenId]);
 
   return (
-    <div className="max-w-8xl mx-auto mt-10 div4">
-      <h2 className="text-2xl mb-4">Презентации:</h2>
-      <div className="flex flex-wrap gap-10">
-        {presentations.map((p) => {
-          const isOwner = currentUser === p.creatorNickname;
-          return (
-            <div
-              key={p._id}
-              className="flex flex-col items-stretch w-54 bg-white rounded-xl shadow p-0 group relative cursor-pointer hover:shadow-lg transition div3"
-              onClick={() => onJoin(p)}
-              tabIndex={0}
-              onKeyDown={e => {
-                if (e.key === "Enter" || e.key === " ") onJoin(p);
-              }}
-              style={{ outline: "none" }}
-            >
-              {/* Миниатюра */}
+    <div
+      className="w-full"
+      style={{
+        minHeight: "60vh",
+        paddingLeft: 50,
+        paddingRight: 50,
+        paddingBottom: 50,
+        boxSizing: "border-box",
+        margin: "0 auto",
+        maxWidth: "100vw",
+      }}
+    >
+      <h2 className="text-2xl mb-8 mt-10 font-bold">Презентации:</h2>
+      <div className="flex flex-col w-full bg-white rounded-2xl shadow-xl">
+        {/* "Шапка" */}
+        <div className="flex text-gray-600 text-sm font-semibold bg-gray-50 py-3 px-8">
+          <div className="flex-[2]">Название</div>
+          <div className="flex-[3]">Первый слайд</div>
+          <div className="flex-[2]">Владелец</div>
+          <div className="flex-1 text-center">Действия</div>
+        </div>
+        {/* Строки */}
+        {presentations.length === 0 ? (
+          <div className="text-center text-gray-400 py-12 text-lg">
+            Нет презентаций
+          </div>
+        ) : (
+          presentations.map((p) => {
+            const isOwner = currentUser === p.creatorNickname;
+            return (
               <div
-                className="w-full h-24 rounded-t-xl bg-gray-50 flex items-center justify-center text-xs text-gray-700 overflow-hidden"
-                style={{ minHeight: 96, maxHeight: 96 }}
-                title={p.firstSlideText ? p.firstSlideText : "Нет содержимого"}
+                key={p._id}
+                className="flex items-center group hover:bg-blue-50 transition px-8 py-5"
+                style={{
+                  borderBottom: "1px solid #f4f4f5",
+                  cursor: "pointer",
+                }}
+                onClick={() => onJoin(p)}
+                tabIndex={0}
+                onKeyDown={e => {
+                  if (e.key === "Enter" || e.key === " ") onJoin(p);
+                }}
               >
-                {p.firstSlideText
-                  ? <span className="truncate w-full px-2">{p.firstSlideText}</span>
-                  : <span className="text-gray-300">Нет слайда</span>}
-              </div>
-              {/* Название и меню */}
-              <div className="flex items-center gap-2 px-4 pt-4 pb-4" onClick={e => e.stopPropagation()}>
-                <div className="font-semibold text-base truncate flex-1">{p.title}</div>
-                <div className="relative">
+                {/* Название */}
+                <div className="flex-[2] text-lg font-bold text-gray-900 truncate">{p.title}</div>
+                {/* Первый слайд */}
+                <div className="flex-[3] text-gray-700 text-base truncate">
+                  {p.firstSlideText
+                    ? <span className="opacity-90">{p.firstSlideText}</span>
+                    : <span className="text-gray-300">Нет слайда</span>}
+                </div>
+                {/* Владелец */}
+                <div className="flex-[2] text-gray-500 text-base">{p.creatorNickname}</div>
+                {/* Действия */}
+                <div className="flex-1 flex justify-center relative">
                   <button
-                    className="ml-1 px-2 py-1 rounded hover:bg-gray-200"
+                    className="rounded hover:bg-gray-200 transition px-2 py-1"
                     onClick={e => {
                       e.stopPropagation();
                       setMenuOpenId(menuOpenId === p._id ? null : p._id);
@@ -95,7 +120,7 @@ export default function PresentationList({
                     ⋮
                   </button>
                   {menuOpenId === p._id && (
-                    <div className="absolute right-0 top-8 z-10 bg-white border rounded shadow-lg w-52 dropdown-menu">
+                    <div className="absolute right-0 top-9 z-10 bg-white border rounded-lg shadow-lg w-52 dropdown-menu">
                       {/* Переименовать */}
                       <button
                         className={`block w-full text-left px-4 py-2 hover:bg-gray-100 focus:outline-none ${!isOwner ? "cursor-default" : ""}`}
@@ -142,11 +167,11 @@ export default function PresentationList({
                   )}
                 </div>
               </div>
-              {/* Больше ничего! */}
-            </div>
-          );
-        })}
+            );
+          })
+        )}
       </div>
+
       {/* Модалка переименования */}
       <Modal
         open={renameModalOpen}
