@@ -38,7 +38,7 @@ export default function PresentationPage({ nickname }) {
     window.scrollTo(0, 0);
   }, [presentationId]);
 
-  // --- Сокеты (без изменений) ---
+  // --- Сокеты (slide-added обновлен!) ---
   useEffect(() => {
     socket.current = io(import.meta.env.VITE_API_URL.replace("/api", ""));
     socket.current.emit("join-presentation", { presentationId, nickname });
@@ -55,9 +55,13 @@ export default function PresentationPage({ nickname }) {
       );
     });
 
+    // ---- АВТОВЫБОР НОВОГО СЛАЙДА ----
     socket.current.on("slide-added", (slide) => {
-      setSlides((prev) => [...prev, slide]);
-      setSelectedSlideIndex((prev) => prev + 1);
+      setSlides((prev) => {
+        const next = [...prev, slide];
+        setSelectedSlideIndex(next.length - 1);
+        return next;
+      });
     });
 
     socket.current.on("slide-deleted", ({ slideId }) => {
