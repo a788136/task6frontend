@@ -6,6 +6,7 @@ import { updateSlide } from "../api/slides";
 import SlidesSidebar from "./SlidesSidebar";
 import SlideArea from "./SlideArea";
 import Toolbar from "./Toolbar";
+import UsersSidebar from "./UsersSidebar"; // <-- импортируй UsersSidebar
 
 export default function PresentationPage({ nickname }) {
   const { id: presentationId } = useParams();
@@ -16,13 +17,13 @@ export default function PresentationPage({ nickname }) {
   const [users, setUsers] = useState([]);
   const [myRole, setMyRole] = useState("viewer");
 
+  const socket = useRef(null);
+
   // История для Undo/Redo
   const [history, setHistory] = useState([]);
   const [historyStep, setHistoryStep] = useState(0);
 
-  const socket = useRef(null);
-
-  // Сброс истории при загрузке презентации
+  // --- Сброс истории при загрузке презентации ---
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
@@ -98,7 +99,6 @@ export default function PresentationPage({ nickname }) {
     };
   }, [presentationId, nickname]);
 
-  // --- История Undo/Redo ---
   function pushHistory(nextSlides) {
     setHistory(prev => {
       const arr = prev.slice(0, historyStep);
@@ -189,30 +189,31 @@ export default function PresentationPage({ nickname }) {
   };
 
   const handleAddImageBlock = (url) => {
-  const currentSlide = slides[selectedSlideIndex];
-  if (!currentSlide || myRole !== "editor") return;
-  const newBlock = {
-    type: "image",
-    content: url,
-    x: 250,
-    y: 100,
-    width: 240,
-    height: 180,
-    _id: Date.now().toString(),
-  };
+    const currentSlide = slides[selectedSlideIndex];
+    if (!currentSlide || myRole !== "editor") return;
+    const newBlock = {
+      type: "image",
+      content: url,
+      x: 250,
+      y: 100,
+      width: 240,
+      height: 180,
+      _id: Date.now().toString(),
+    };
     const updatedBlocks = [...(currentSlide.blocks || []), newBlock];
     const updatedSlide = { ...currentSlide, blocks: updatedBlocks };
     const newSlides = [...slides];
     newSlides[selectedSlideIndex] = updatedSlide;
     setSlidesAndHistory(newSlides);
     updateSlide(currentSlide._id, { blocks: updatedBlocks }).catch(console.error);
-    };
+  };
 
   if (loading || !presentation)
     return <div className="p-6">Загрузка...</div>;
 
   const selectedSlide = slides.length > 0 && slides[selectedSlideIndex] ? slides[selectedSlideIndex] : null;
 
+  // Добавь UsersSidebar (например, справа)
   return (
     <div className="flex h-[80vh]">
       <SlidesSidebar
@@ -225,13 +226,13 @@ export default function PresentationPage({ nickname }) {
       />
       <div className="flex flex-col flex-1 items-center">
         <Toolbar
-            myRole={myRole}
-            onAddTextBlock={handleAddTextBlock}
-            onAddImageBlock={handleAddImageBlock}
-            onUndo={handleUndo}
-            onRedo={handleRedo}
-            canUndo={historyStep > 1}
-            canRedo={historyStep < history.length}
+          myRole={myRole}
+          onAddTextBlock={handleAddTextBlock}
+          onAddImageBlock={handleAddImageBlock}
+          onUndo={handleUndo}
+          onRedo={handleRedo}
+          canUndo={historyStep > 1}
+          canRedo={historyStep < history.length}
         />
         <SlideArea
           selectedSlide={selectedSlide}
@@ -240,6 +241,23 @@ export default function PresentationPage({ nickname }) {
           onBlockMove={handleBlockMove}
         />
       </div>
+      {/* Вот здесь панель пользователей */}
+      <UsersSidebar
+        users={users}
+        myRole={myRole}
+        nickname={nickname}
+        creatorNickname={presentation?.creatorNickname}
+        onChangeRole={(user, newRole) => {
+          // Меняем роль (только создатель может)
+          if (presentation && nickname === presentation.creatorNickname) {
+            socket.current.emit("change-role", {
+              presentationId,
+              nickname: user.nickname,
+              newRole,
+            });
+          }
+        }}
+      />
     </div>
   );
 }
