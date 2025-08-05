@@ -6,7 +6,7 @@ import { updateSlide } from "../api/slides";
 import SlidesSidebar from "./SlidesSidebar";
 import SlideArea from "./SlideArea";
 import Toolbar from "./Toolbar";
-import UsersSidebar from "./UsersSidebar"; // <-- импортируй UsersSidebar
+import UsersSidebar from "./UsersSidebar";
 
 export default function PresentationPage({ nickname }) {
   const { id: presentationId } = useParams();
@@ -23,7 +23,6 @@ export default function PresentationPage({ nickname }) {
   const [history, setHistory] = useState([]);
   const [historyStep, setHistoryStep] = useState(0);
 
-  // --- Сброс истории при загрузке презентации ---
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
@@ -39,7 +38,6 @@ export default function PresentationPage({ nickname }) {
     window.scrollTo(0, 0);
   }, [presentationId]);
 
-  // --- Сокеты (slide-added обновлен!) ---
   useEffect(() => {
     socket.current = io(import.meta.env.VITE_API_URL.replace("/api", ""));
     socket.current.emit("join-presentation", { presentationId, nickname });
@@ -56,7 +54,6 @@ export default function PresentationPage({ nickname }) {
       );
     });
 
-    // ---- АВТОВЫБОР НОВОГО СЛАЙДА ----
     socket.current.on("slide-added", (slide) => {
       setSlides((prev) => {
         const next = [...prev, slide];
@@ -129,7 +126,6 @@ export default function PresentationPage({ nickname }) {
     pushHistory(newSlides);
   }
 
-  // --- Слайды ---
   const handleAddSlide = () => {
     const order = slides.length;
     socket.current.emit("add-slide", { presentationId, order });
@@ -144,7 +140,6 @@ export default function PresentationPage({ nickname }) {
     });
   };
 
-  // --- Drag & Drop блоков ---
   const handleBlockMove = (block) => {
     const currentSlide = slides[selectedSlideIndex];
     if (!currentSlide) return;
@@ -162,12 +157,10 @@ export default function PresentationPage({ nickname }) {
     updateSlide(currentSlide._id, { blocks: updatedBlocks }).catch(console.error);
   };
 
-  // --- Редактирование текста ---
   const handleTextChange = (block) => {
     handleBlockMove(block);
   };
 
-  // --- Добавить текстовый блок ---
   const handleAddTextBlock = () => {
     const currentSlide = slides[selectedSlideIndex];
     if (!currentSlide || myRole !== "editor") return;
@@ -213,7 +206,6 @@ export default function PresentationPage({ nickname }) {
 
   const selectedSlide = slides.length > 0 && slides[selectedSlideIndex] ? slides[selectedSlideIndex] : null;
 
-  // Добавь UsersSidebar (например, справа)
   return (
     <div className="flex h-[80vh]">
       <SlidesSidebar
@@ -234,6 +226,27 @@ export default function PresentationPage({ nickname }) {
           canUndo={historyStep > 1}
           canRedo={historyStep < history.length}
         />
+        {/* Оранжевая плашка-информер */}
+        {myRole !== "editor" && (
+          <div
+            className="w-full max-w-[800px] mx-auto my-4 px-6 py-4 rounded-xl"
+            style={{
+              background: "#FFF6E5",
+              color: "#FF7900",
+              border: "1px solid #FFDDB0",
+              fontWeight: 600,
+              fontSize: "1.15rem",
+              textAlign: "center",
+              boxShadow: "0 2px 8px 0 #ff790011",
+              letterSpacing: "0.01em",
+            }}
+          >
+            <span style={{ color: "#FF7900" }}>
+              У вас нет прав на редактирование этой презентации.<br />
+              Вы можете только просматривать слайды в реальном времени.
+            </span>
+          </div>
+        )}
         <SlideArea
           selectedSlide={selectedSlide}
           myRole={myRole}
@@ -241,14 +254,13 @@ export default function PresentationPage({ nickname }) {
           onBlockMove={handleBlockMove}
         />
       </div>
-      {/* Вот здесь панель пользователей */}
+      {/* Боковая панель пользователей */}
       <UsersSidebar
         users={users}
         myRole={myRole}
         nickname={nickname}
         creatorNickname={presentation?.creatorNickname}
         onChangeRole={(user, newRole) => {
-          // Меняем роль (только создатель может)
           if (presentation && nickname === presentation.creatorNickname) {
             socket.current.emit("change-role", {
               presentationId,
