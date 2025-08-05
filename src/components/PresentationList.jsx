@@ -17,7 +17,8 @@ export default function PresentationList({
   const [deleteId, setDeleteId] = useState(null);
 
   // Открыть модалку переименования
-  const handleRenameClick = (presentation) => {
+  const handleRenameClick = (presentation, e) => {
+    e.stopPropagation();
     setRenameId(presentation._id);
     setRenameValue(presentation.title);
     setRenameModalOpen(true);
@@ -31,7 +32,8 @@ export default function PresentationList({
   };
 
   // Открыть модалку удаления
-  const handleDeleteClick = (presentation) => {
+  const handleDeleteClick = (presentation, e) => {
+    e.stopPropagation();
     setDeleteId(presentation._id);
     setDeleteModalOpen(true);
     setMenuOpenId(null);
@@ -120,12 +122,14 @@ export default function PresentationList({
                     ⋮
                   </button>
                   {menuOpenId === p._id && (
-                    <div className="absolute right-0 top-9 z-10 bg-white border rounded-lg shadow-lg w-52 dropdown-menu">
+                    <div className="absolute right-0 top-9 z-10 bg-white border rounded-lg shadow-lg w-52 dropdown-menu"
+                      onClick={e => e.stopPropagation()}
+                    >
                       {/* Переименовать */}
                       <button
                         className={`block w-full text-left px-4 py-2 hover:bg-gray-100 focus:outline-none ${!isOwner ? "cursor-default" : ""}`}
                         style={{ pointerEvents: isOwner ? "auto" : "none" }}
-                        onClick={isOwner ? () => handleRenameClick(p) : undefined}
+                        onClick={isOwner ? (e) => handleRenameClick(p, e) : undefined}
                         tabIndex={isOwner ? 0 : -1}
                       >
                         Переименовать
@@ -141,7 +145,7 @@ export default function PresentationList({
                         style={{ pointerEvents: isOwner ? "auto" : "none" }}
                         onClick={
                           isOwner
-                            ? () => handleDeleteClick(p)
+                            ? (e) => handleDeleteClick(p, e)
                             : undefined
                         }
                         tabIndex={isOwner ? 0 : -1}
@@ -156,7 +160,8 @@ export default function PresentationList({
                       {/* Открыть в новой вкладке */}
                       <button
                         className="block w-full text-left px-4 py-2 hover:bg-gray-100"
-                        onClick={() => {
+                        onClick={e => {
+                          e.stopPropagation();
                           setMenuOpenId(null);
                           onOpenInNewTab(p._id);
                         }}
