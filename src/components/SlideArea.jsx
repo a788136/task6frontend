@@ -46,7 +46,7 @@ export default function SlideArea({
 
   return (
     <div
-      className="flex-1 flex flex-col items-center justify-center bg-gray-50 relative"
+      className="flex-1 flex flex-col items-center justify-center relative"
       style={{ minHeight: 420 }}
     >
       {/* === ВАЖНО! Здесь ref === */}

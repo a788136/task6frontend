@@ -15,12 +15,14 @@ export default function PresentationPage({ nickname }) {
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState([]);
   const [myRole, setMyRole] = useState("viewer");
+
+  // История для Undo/Redo
+  const [history, setHistory] = useState([]);
+  const [historyStep, setHistoryStep] = useState(0);
+
   const socket = useRef(null);
 
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
-
+  // Сброс истории при загрузке презентации
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
@@ -29,10 +31,14 @@ export default function PresentationPage({ nickname }) {
       setSlides(data.slides || []);
       setSelectedSlideIndex(0);
       setLoading(false);
+      setHistory([data.slides || []]);
+      setHistoryStep(1);
     }
     fetchData();
+    window.scrollTo(0, 0);
   }, [presentationId]);
 
+  // --- Сокеты (без изменений) ---
   useEffect(() => {
     socket.current = io(import.meta.env.VITE_API_URL.replace("/api", ""));
     socket.current.emit("join-presentation", { presentationId, nickname });
@@ -88,6 +94,38 @@ export default function PresentationPage({ nickname }) {
     };
   }, [presentationId, nickname]);
 
+  // --- История Undo/Redo ---
+  function pushHistory(nextSlides) {
+    setHistory(prev => {
+      const arr = prev.slice(0, historyStep);
+      arr.push(nextSlides);
+      return arr.slice(-50);
+    });
+    setHistoryStep(h => h + 1);
+  }
+
+  function handleUndo() {
+    if (historyStep <= 1) return;
+    setHistoryStep(h => {
+      setSlides(history[h - 2]);
+      return h - 1;
+    });
+  }
+
+  function handleRedo() {
+    if (historyStep >= history.length) return;
+    setHistoryStep(h => {
+      setSlides(history[h]);
+      return h + 1;
+    });
+  }
+
+  function setSlidesAndHistory(newSlides) {
+    setSlides(newSlides);
+    pushHistory(newSlides);
+  }
+
+  // --- Слайды ---
   const handleAddSlide = () => {
     const order = slides.length;
     socket.current.emit("add-slide", { presentationId, order });
@@ -102,7 +140,7 @@ export default function PresentationPage({ nickname }) {
     });
   };
 
-  // Drag & Drop для блоков
+  // --- Drag & Drop блоков ---
   const handleBlockMove = (block) => {
     const currentSlide = slides[selectedSlideIndex];
     if (!currentSlide) return;
@@ -111,22 +149,21 @@ export default function PresentationPage({ nickname }) {
     );
     const newSlides = [...slides];
     newSlides[selectedSlideIndex] = { ...currentSlide, blocks: updatedBlocks };
-    setSlides(newSlides);
+    setSlidesAndHistory(newSlides);
 
     socket.current.emit("update-block", {
       slideId: currentSlide._id,
       block,
     });
-
     updateSlide(currentSlide._id, { blocks: updatedBlocks }).catch(console.error);
   };
 
-  // Изменение текста
+  // --- Редактирование текста ---
   const handleTextChange = (block) => {
     handleBlockMove(block);
   };
 
-  // Добавить текстовый блок
+  // --- Добавить текстовый блок ---
   const handleAddTextBlock = () => {
     const currentSlide = slides[selectedSlideIndex];
     if (!currentSlide || myRole !== "editor") return;
@@ -137,14 +174,13 @@ export default function PresentationPage({ nickname }) {
       y: 160,
       width: 180,
       height: 40,
-      _id: Date.now().toString(), // для фронта временно, на бэке появится настоящий id
+      _id: Date.now().toString(),
     };
     const updatedBlocks = [...(currentSlide.blocks || []), newBlock];
     const updatedSlide = { ...currentSlide, blocks: updatedBlocks };
     const newSlides = [...slides];
     newSlides[selectedSlideIndex] = updatedSlide;
-    setSlides(newSlides);
-
+    setSlidesAndHistory(newSlides);
     updateSlide(currentSlide._id, { blocks: updatedBlocks }).catch(console.error);
   };
 
@@ -164,7 +200,14 @@ export default function PresentationPage({ nickname }) {
         myRole={myRole}
       />
       <div className="flex flex-col flex-1 items-center">
-        <Toolbar myRole={myRole} onAddTextBlock={handleAddTextBlock} />
+        <Toolbar
+          myRole={myRole}
+          onAddTextBlock={handleAddTextBlock}
+          onUndo={handleUndo}
+          onRedo={handleRedo}
+          canUndo={historyStep > 1}
+          canRedo={historyStep < history.length}
+        />
         <SlideArea
           selectedSlide={selectedSlide}
           myRole={myRole}
