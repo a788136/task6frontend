@@ -188,6 +188,26 @@ export default function PresentationPage({ nickname }) {
     updateSlide(currentSlide._id, { blocks: updatedBlocks }).catch(console.error);
   };
 
+  const handleAddImageBlock = (url) => {
+  const currentSlide = slides[selectedSlideIndex];
+  if (!currentSlide || myRole !== "editor") return;
+  const newBlock = {
+    type: "image",
+    content: url,
+    x: 250,
+    y: 100,
+    width: 240,
+    height: 180,
+    _id: Date.now().toString(),
+  };
+    const updatedBlocks = [...(currentSlide.blocks || []), newBlock];
+    const updatedSlide = { ...currentSlide, blocks: updatedBlocks };
+    const newSlides = [...slides];
+    newSlides[selectedSlideIndex] = updatedSlide;
+    setSlidesAndHistory(newSlides);
+    updateSlide(currentSlide._id, { blocks: updatedBlocks }).catch(console.error);
+    };
+
   if (loading || !presentation)
     return <div className="p-6">Загрузка...</div>;
 
@@ -205,12 +225,13 @@ export default function PresentationPage({ nickname }) {
       />
       <div className="flex flex-col flex-1 items-center">
         <Toolbar
-          myRole={myRole}
-          onAddTextBlock={handleAddTextBlock}
-          onUndo={handleUndo}
-          onRedo={handleRedo}
-          canUndo={historyStep > 1}
-          canRedo={historyStep < history.length}
+            myRole={myRole}
+            onAddTextBlock={handleAddTextBlock}
+            onAddImageBlock={handleAddImageBlock}
+            onUndo={handleUndo}
+            onRedo={handleRedo}
+            canUndo={historyStep > 1}
+            canRedo={historyStep < history.length}
         />
         <SlideArea
           selectedSlide={selectedSlide}

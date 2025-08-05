@@ -1,38 +1,50 @@
-import React from "react";
+import React, { useRef } from "react";
+import { uploadImage } from "../api/upload";
 
 export default function Toolbar({
   myRole,
   onAddTextBlock,
+  onAddImageBlock,
   onUndo,
   onRedo,
   canUndo,
   canRedo,
 }) {
-  if (myRole !== "editor") {
-    return (
-      <div className="w-full flex justify-center mb-3">
-        <div
-          className="rounded px-4 py-2 text-orange-800 bg-orange-100 font-semibold text-center shadow"
-          style={{
-            fontSize: 16,
-            border: "1px solid #fbbf24",
-            maxWidth: 500,
-          }}
-        >
-          У вас нет прав для редактирования этой презентации. Просмотр только для чтения.
-        </div>
-      </div>
-    );
-  }
+  const fileRef = useRef();
 
+  const handleImageInput = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      const { url } = await uploadImage(file);
+      onAddImageBlock(url);
+    } catch (err) {
+      alert('Ошибка загрузки изображения');
+    }
+  };
+
+  if (myRole !== "editor") return null;
   return (
-    <div className="w-full flex gap-4 bg-white shadow p-3 rounded mb-3">
+    <div className="w-full flex gap-4 bg-white shadow p-3 rounded mb-3 items-center">
       <button
         className="bg-blue-500 text-white rounded px-4 py-1"
         onClick={onAddTextBlock}
       >
         Текст
       </button>
+      <button
+        className="bg-green-500 text-white rounded px-4 py-1"
+        onClick={() => fileRef.current.click()}
+      >
+        Картинка
+      </button>
+      <input
+        type="file"
+        accept="image/*"
+        ref={fileRef}
+        onChange={handleImageInput}
+        className="hidden"
+      />
       <button
         className="bg-gray-200 text-gray-700 rounded px-4 py-1"
         onClick={onUndo}

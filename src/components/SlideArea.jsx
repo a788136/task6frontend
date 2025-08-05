@@ -1,5 +1,6 @@
 import React, { useState, useRef } from "react";
-import { Stage, Layer, Text } from "react-konva";
+import { Stage, Layer, Text, Image as KonvaImage } from "react-konva";
+import useImage from "use-image";
 
 export default function SlideArea({
   selectedSlide,
@@ -9,7 +10,7 @@ export default function SlideArea({
 }) {
   const [editing, setEditing] = useState(null); // { block, x, y, value }
   const inputRef = useRef(null);
-  const slideAreaRef = useRef(null); // ССЫЛКА на контейнер
+  const slideAreaRef = useRef(null);
 
   // Вызовем input ровно на тексте
   const handleTextClick = (block, idx, e) => {
@@ -31,6 +32,38 @@ export default function SlideArea({
     });
     setTimeout(() => inputRef.current && inputRef.current.focus(), 10);
   };
+
+  // Компонент для изображения
+  function SlideImageBlock({ block, myRole, onBlockMove }) {
+    // Исправление: если block.content начинается не с http, добавляем base url
+    const getImageUrl = (src) => {
+      if (!src) return "";
+      if (src.startsWith("http")) return src;
+      return `${import.meta.env.VITE_API_URL.replace("/api", "")}${src}`;
+    };
+    const [img, status] = useImage(getImageUrl(block.content), "anonymous");
+    // Для отладки:
+    // console.log("block.content:", block.content, "imageUrl:", getImageUrl(block.content), "img:", img, "status:", status);
+    return (
+      <KonvaImage
+        x={block.x}
+        y={block.y}
+        width={block.width || 180}
+        height={block.height || 120}
+        image={img}
+        draggable={myRole === "editor"}
+        onDragEnd={e => {
+          if (myRole === "editor") {
+            onBlockMove({
+              ...block,
+              x: e.target.x(),
+              y: e.target.y(),
+            });
+          }
+        }}
+      />
+    );
+  }
 
   if (!selectedSlide) {
     return (
@@ -58,36 +91,49 @@ export default function SlideArea({
         <Stage width={800} height={400}>
           <Layer>
             {selectedSlide.blocks &&
-              selectedSlide.blocks.map((block, idx) =>
-                block.type === "text" ? (
-                  <Text
-                    key={block._id || idx}
-                    x={block.x}
-                    y={block.y}
-                    text={block.content}
-                    fontSize={20}
-                    draggable={myRole === "editor"}
-                    onClick={e => handleTextClick(block, idx, e)}
-                    onDragEnd={e => {
-                      if (myRole === "editor") {
-                        onBlockMove({
-                          ...block,
-                          x: e.target.x(),
-                          y: e.target.y(),
-                        });
-                      }
-                    }}
-                    style={{
-                      cursor:
-                        myRole === "editor"
-                          ? editing && editing.idx === idx
-                            ? "text"
-                            : "pointer"
-                          : "default",
-                    }}
-                  />
-                ) : null
-              )}
+              selectedSlide.blocks.map((block, idx) => {
+                if (block.type === "text") {
+                  return (
+                    <Text
+                      key={block._id || idx}
+                      x={block.x}
+                      y={block.y}
+                      text={block.content}
+                      fontSize={20}
+                      draggable={myRole === "editor"}
+                      onClick={e => handleTextClick(block, idx, e)}
+                      onDragEnd={e => {
+                        if (myRole === "editor") {
+                          onBlockMove({
+                            ...block,
+                            x: e.target.x(),
+                            y: e.target.y(),
+                          });
+                        }
+                      }}
+                      style={{
+                        cursor:
+                          myRole === "editor"
+                            ? editing && editing.idx === idx
+                              ? "text"
+                              : "pointer"
+                            : "default",
+                      }}
+                    />
+                  );
+                }
+                if (block.type === "image") {
+                  return (
+                    <SlideImageBlock
+                      key={block._id || idx}
+                      block={block}
+                      myRole={myRole}
+                      onBlockMove={onBlockMove}
+                    />
+                  );
+                }
+                return null;
+              })}
           </Layer>
         </Stage>
 
