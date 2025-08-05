@@ -8,7 +8,23 @@ export default function Toolbar({
   canUndo,
   canRedo,
 }) {
-  if (myRole !== "editor") return null;
+  if (myRole !== "editor") {
+    return (
+      <div className="w-full flex justify-center mb-3">
+        <div
+          className="rounded px-4 py-2 text-orange-800 bg-orange-100 font-semibold text-center shadow"
+          style={{
+            fontSize: 16,
+            border: "1px solid #fbbf24",
+            maxWidth: 500,
+          }}
+        >
+          У вас нет прав для редактирования этой презентации. Просмотр только для чтения.
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full flex gap-4 bg-white shadow p-3 rounded mb-3">
       <button
